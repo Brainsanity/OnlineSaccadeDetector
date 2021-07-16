@@ -37,7 +37,7 @@ void mexFunction(
 
 
 	// perform saccade detection
-	SaccadeDetector sacDetector;
+	SaccadeDetector sacDetector(nullptr, 200, 1016.185);
 	
 	EyeData eyeData;
 	int iSample = 0;
