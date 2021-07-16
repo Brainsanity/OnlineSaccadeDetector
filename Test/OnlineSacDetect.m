@@ -233,11 +233,11 @@ plot([1; 1; nan] * idxMaskOn(tMaskOn < tEnd), [ylim'; nan] * ones(size(idxMaskOn
 
 figure;
 subplot(1,2,1);
-hist(onsetDiff, 20);
+hist(onsetDiff, 50);
 title('Difference in Sac On');
 xlabel('Difference (ms)');
 subplot(1,2,2);
-hist(offsetDiff, 20);
+hist(offsetDiff, 50);
 title('Difference in Sac Off');
 xlabel('Difference (ms)');
 
