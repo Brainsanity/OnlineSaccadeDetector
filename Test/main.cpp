@@ -8,7 +8,7 @@ void mexFunction(
     const mxArray *prhs[]  // Array of right hand side arguments: x, y, blinking, tracking, sample per frame
 ){
 	// extract input arguments
-	if ( nrhs != 5 ) mexErrMsgTxt("Arguments error!");
+	if ( nrhs < 5 ) mexErrMsgTxt("Arguments error!");
 
 	if( mxDOUBLE_CLASS != mxGetClassID(prhs[0]) ) mexErrMsgTxt("First argument should be eye x (double)!");
 	if( mxDOUBLE_CLASS != mxGetClassID(prhs[1]) ) mexErrMsgTxt("Second argument should be eye y (double)!");
@@ -24,6 +24,17 @@ void mexFunction(
 	int nSamples = mxGetNumberOfElements(prhs[0]);
 	int nFrames = mxGetNumberOfElements(prhs[4]);
 
+	float hysterisis = 15;			// hysterisis for marking the end of a saccade (ms)
+	float minDur = 15;				// minimal duration of a saccade (ms)
+	float devThresh = 5;			// threshold for deviation (arcmin)
+	float refWindow = 30;			// reference window for saccade detection (ms)
+	float refInterval = 3;			// interval between refWindow and the sample in observation (ms)
+	if( nrhs >= 6 && mxIsSingle(prhs[5]) )	 hysterisis		= *(float*)mxGetPr(prhs[5]);
+	if( nrhs >= 7 && mxIsSingle(prhs[6]) )	 minDur 		= *(float*)mxGetPr(prhs[6]);
+	if( nrhs >= 8 && mxIsSingle(prhs[7]) )	 devThresh		= *(float*)mxGetPr(prhs[7]);
+	if( nrhs >= 9 && mxIsSingle(prhs[8]) )	 refWindow		= *(float*)mxGetPr(prhs[8]);
+	if( nrhs >= 10 && mxIsSingle(prhs[9]) )	 refInterval	= *(float*)mxGetPr(prhs[9]);
+	mexPrintf("hysterisis class ID: %d, name: %s\n", mxGetClassID(prhs[5]), mxGetClassName(prhs[5]));
 
 	// create output arguments
 	plhs[0] = mxCreateLogicalMatrix(1, nFrames);	// IsSaccadeOn
@@ -37,7 +48,7 @@ void mexFunction(
 
 
 	// perform saccade detection
-	SaccadeDetector sacDetector(nullptr, 200, 1016.185);
+	SaccadeDetector sacDetector(nullptr, 200, 1016.185, hysterisis, minDur, devThresh, refWindow, refInterval);
 	
 	EyeData eyeData;
 	int iSample = 0;
