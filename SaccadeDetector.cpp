@@ -7,6 +7,7 @@ SaccadeDetector::SaccadeDetector(
 		float sRate,			// sampling rate of the eye trace
 		float hysterisis,			// hysterisis for marking the end of a saccade (ms)
 		float minDur,				// minimal duration of a saccade (ms)
+		float minInterval,			// minimal duration of a saccade, any event happens less than this after a detected saccade will be ignored (ms)
 		float devThresh,			// threshold for deviation (arcmin)
 		float refWindow,			// reference window for saccade detection (ms)
 		float refInterval			// interval between refWindow and the sample in observation (ms)
@@ -15,12 +16,14 @@ SaccadeDetector::SaccadeDetector(
     _sRate(sRate),
     _hysterisis(hysterisis),
     _minDur(minDur),
+    _minInterval(minInterval),
     _devThresh(devThresh),
     _refWindow(refWindow),
     _refInterval(refInterval)
 {
 	_hysterisis = _hysterisis / (1000.0 / _rfRate);
 	_minDur = _minDur / (1000.0 / _rfRate);
+	_minInterval = _minInterval / (1000.0 / _rfRate);
 	_refWindow = (int) (_refWindow / 1000 * _sRate + 0.5);
 	_refInterval = (int) (_refInterval / 1000 * _sRate + 0.5);
 
@@ -50,6 +53,7 @@ void SaccadeDetector::Initialize(const eye::signal::DataSliceEyeBlock::ptr_t &pD
 	_isSaccadeOn = false;
 	_curHysterisis = 0;
 	_curDur = 0;
+	_curInterval = _minInterval + 1;
 
 	_isBlinking = false;
 	_isNoTrack = false;
@@ -78,9 +82,10 @@ void SaccadeDetector::Update(const eye::signal::DataSliceEyeBlock::ptr_t &pData)
 
 	float deviation = sqrt(pow(_xBuf[_xBuf.size()-1] - (_refWindow+_refInterval-1)*xVel - xRefMean, 2.0) + pow(_yBuf[_yBuf.size()-1] - (_refWindow+_refInterval-1)*yVel - yRefMean, 2.0));
 
-	if(!_isSaccadeOn && deviation > _devThresh){
+	if(!_isSaccadeOn && deviation > _devThresh && _curInterval >= _minInterval){
 		_isSaccadeOn = true;
         _curDur = 0;
+        _curInterval = 0;
         _curHysterisis = 0;
     }
 
@@ -91,6 +96,11 @@ void SaccadeDetector::Update(const eye::signal::DataSliceEyeBlock::ptr_t &pData)
 			if(_curHysterisis > _hysterisis && _curDur > _minDur) _isSaccadeOn = false;
 	    }
 	    else _curHysterisis = 0;
+	}
+
+	if(!_isSaccadeOn){
+		_curInterval++;
+		if(deviation > _devThresh) _curInterval = 0;
 	}
 
 	_isBlinking = pData->getLatest()->blinking1;
