@@ -1,9 +1,9 @@
 load('20210605_04.mat');
 
-hysterisis = 5;15;			% hysterisis for marking the end of a saccade (ms)
+hysterisis = 0;5;15;			% hysterisis for marking the end of a saccade (ms)
 minDur = 15;				% minimal duration of a saccade (ms)
-minInterval = 15;			% minimal duration of a saccade, any event happens less than this after a detected saccade will be ignored (ms)
-devThresh = 10;5;			% threshold for deviation (arcmin)
+minInterval = 50;15;			% minimal duration of a saccade, any event happens less than this after a detected saccade will be ignored (ms)
+devThresh = 5;			% threshold for deviation (arcmin)
 refWindow = 20;30;			% reference window for saccade detection (ms)
 refInterval = 1;3;
 

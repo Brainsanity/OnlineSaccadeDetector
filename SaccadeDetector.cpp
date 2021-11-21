@@ -85,7 +85,7 @@ void SaccadeDetector::Update(const eye::signal::DataSliceEyeBlock::ptr_t &pData)
 	if(!_isSaccadeOn && deviation > _devThresh && _curInterval >= _minInterval){
 		_isSaccadeOn = true;
         _curDur = 0;
-        _curInterval = 0;
+        _curInterval = -1;			// so that the ++ operation at saccade off will make it 0
         _curHysterisis = 0;
     }
 
