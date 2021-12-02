@@ -28,28 +28,36 @@ void mexFunction(
 	float minDur = 15;				// minimal duration of a saccade (ms)
 	float minInterval = 15;			// minimal duration of a saccade, any event happens less than this after a detected saccade will be ignored (ms)
 	float devThresh = 5;			// threshold for deviation (arcmin)
+	float devOffThresh = 5;			// offset threshold for deviation 
 	float refWindow = 30;			// reference window for saccade detection (ms)
 	float refInterval = 3;			// interval between refWindow and the sample in observation (ms)
+	float mtHysterisis = 15;		// hysterisis for marking the end of a mistrack (ms)
+	float mtDevThresh = 100;		// threshold for deviation to detect mistrack (arcmin)
 	if( nrhs >= 6 && mxIsSingle(prhs[5]) )	 hysterisis		= *(float*)mxGetPr(prhs[5]);
 	if( nrhs >= 7 && mxIsSingle(prhs[6]) )	 minDur 		= *(float*)mxGetPr(prhs[6]);
-	if( nrhs >= 8 && mxIsSingle(prhs[6]) )	 minInterval	= *(float*)mxGetPr(prhs[7]);
-	if( nrhs >= 9 && mxIsSingle(prhs[7]) )	 devThresh		= *(float*)mxGetPr(prhs[8]);
-	if( nrhs >= 10 && mxIsSingle(prhs[8]) )	 refWindow		= *(float*)mxGetPr(prhs[9]);
-	if( nrhs >= 11 && mxIsSingle(prhs[9]) )	 refInterval	= *(float*)mxGetPr(prhs[10]);
+	if( nrhs >= 8 && mxIsSingle(prhs[7]) )	 minInterval	= *(float*)mxGetPr(prhs[7]);
+	if( nrhs >= 9 && mxIsSingle(prhs[8]) )	 devThresh		= *(float*)mxGetPr(prhs[8]);
+	if( nrhs >= 10 && mxIsSingle(prhs[9]) )	 devOffThresh	= *(float*)mxGetPr(prhs[9]);
+	if( nrhs >= 11 && mxIsSingle(prhs[10]) ) refWindow		= *(float*)mxGetPr(prhs[10]);
+	if( nrhs >= 12 && mxIsSingle(prhs[11]) ) refInterval	= *(float*)mxGetPr(prhs[11]);
+	if( nrhs >= 13 && mxIsSingle(prhs[12]) ) mtHysterisis	= *(float*)mxGetPr(prhs[12]);
+	if( nrhs >= 14 && mxIsSingle(prhs[13]) ) mtDevThresh	= *(float*)mxGetPr(prhs[13]);
 
 	// create output arguments
 	plhs[0] = mxCreateLogicalMatrix(1, nFrames);	// IsSaccadeOn
 	plhs[1] = mxCreateLogicalMatrix(1, nFrames);	// IsBlinking
 	plhs[2] = mxCreateLogicalMatrix(1, nFrames);	// IsNoTracking
-	plhs[3] = mxCreateDoubleMatrix(1, nFrames, mxREAL);		// deviation
+	plhs[3] = mxCreateLogicalMatrix(1, nFrames);	// IsMistracking
+	plhs[4] = mxCreateDoubleMatrix(1, nFrames, mxREAL);		// deviation
 	bool* pIsSaccadeOn = (bool*)mxGetPr(plhs[0]);
 	bool* pIsBlinking = (bool*)mxGetPr(plhs[1]);
 	bool* pIsNoTracking = (bool*)mxGetPr(plhs[2]);
-	double* pDeviation = (double*)mxGetPr(plhs[3]);
+	bool* pIsMistracking = (bool*)mxGetPr(plhs[3]);
+	double* pDeviation = (double*)mxGetPr(plhs[4]);
 
 
 	// perform saccade detection
-	SaccadeDetector sacDetector(nullptr, 200, 1016.185, hysterisis, minDur, minInterval, devThresh, refWindow, refInterval);
+	SaccadeDetector sacDetector(nullptr, 200, 1016.185, hysterisis, minDur, minInterval, devThresh, devOffThresh, refWindow, refInterval, mtHysterisis, mtDevThresh);
 	
 	EyeData eyeData;
 	int iSample = 0;
@@ -75,5 +83,6 @@ void mexFunction(
 		pIsSaccadeOn[i] = sacDetector.IsSaccadeOn();
 		pIsBlinking[i] = sacDetector.IsBlinking();
 		pIsNoTracking[i] = sacDetector.IsNoTracking();
+		pIsMistracking[i] = sacDetector.IsMistracking();
 	}
 }
